@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enigma Tchat</title>
+    <style>
+        @font-face {
+            font-family: 'Seven Segment';
+            src: url('Seven Segment.ttf') format('truetype'); /* Utilisez un chemin relatif ici */
+        }
+
+        #videoBackground {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -1;
+        }
+
+        body {
+            background-color: #000;
+            font-family: 'Seven Segment'
+        }
+
+        #messageContainer {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: black;
+            border-radius: 25px;
+            box-shadow: 0 0 20px rgba(0, 255, 50, 0.35);
+        }
+
+        label {
+            color: #00FF32;
+            display: block;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 3px solid #00FF32;
+            border-radius: 3px;
+            box-sizing: border-box;
+            color: #00FF32;
+            background-color: black;
+            font-family: 'Seven Segment'
+        }
+
+        button {
+            padding: 8px;
+            border: 3px solid #00FF32;
+            background-color: #000;
+            color: lightgreen;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: 'Seven Segment'
+        }
+
+        #chatMessages {
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Seven Segment';
+            color: #00FF32; /* Couleur du texte pour les messages du chat */
+        }
+    </style>
+</head>
+<body>
+
+    <video id="videoBackground" autoplay loop muted>
+        <source src="tchatVid.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <div id="messageContainer">
+        <div id="chatMessages"></div>
+        <div>
+            <input type="text" id="messageInput" placeholder="Type your message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Get the saved username from local storage
+        var username = localStorage.getItem("username");
+
+        // Create a WebSocket connection
+        const socket = new WebSocket('ws://localhost:3000');
+
+        // Function to send a message
+        function sendMessage() {
+            var messageInput = document.getElementById("messageInput");
+            var chatMessages = document.getElementById("chatMessages");
+
+            // Get the message text
+            var messageText = messageInput.value.trim();
+
+            // Check if the message is not empty
+            if (messageText !== "") {
+                // Create a new paragraph element for the message with username
+                var messageParagraph = document.createElement("p");
+                messageParagraph.textContent = username + ": " + messageText;
+
+                // Append the message to the chat
+                chatMessages.appendChild(messageParagraph);
+
+                // Clear the input field
+                messageInput.value = "";
+
+                // Scroll to the bottom to show the latest message
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Send the message with username to the server
+                socket.send(username + ": " + messageText);
+            }
+        }
+
+        // Function to handle incoming messages from the server
+        socket.onmessage = function (event) {
+            var chatMessages = document.getElementById("chatMessages");
+
+            // Vérifier si le message est un objet Blob
+            if (event.data instanceof Blob) {
+                // Convertir le Blob en texte
+                var reader = new FileReader();
+                reader.onload = function () {
+                    // Create a new paragraph element for the received message
+                    var messageParagraph = document.createElement("p");
+                    messageParagraph.textContent = reader.result;
+
+                    // Append the message to the chat
+                    chatMessages.appendChild(messageParagraph);
+
+                    // Scroll to the bottom to show the latest message
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                };
+                reader.readAsText(event.data);
+            } else {
+                // Si ce n'est pas un Blob, traiter comme une chaîne de texte normale
+                var messageParagraph = document.createElement("p");
+                messageParagraph.textContent = event.data;
+
+                // Append the message to the chat
+                chatMessages.appendChild(messageParagraph);
+
+                // Scroll to the bottom to show the latest message
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        };
+    </script>
+
+</body>
+</html>

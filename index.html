@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Messenger - Login</title>
+    <style>
+        @font-face {
+            font-family: 'Seven Segment';
+            src: url('Seven Segment.ttf') format('truetype'); /* Utilisez un chemin relatif ici */
+        }
+
+        #videoBackground {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -1;
+        }
+
+        body {
+            background-color: #000;
+            font-family: 'Seven Segment';
+            text-align: center;
+            margin-top: 100px;
+        }
+
+        #loginContainer {
+            max-width: 300px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: black;
+            border-radius: 25px;
+            box-shadow: 0 0 20px rgba(0, 255, 50, 0.35);
+        }
+
+        label {
+            color: #00FF32;
+            display: block;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 3px solid #00FF32;
+            border-radius: 3px;
+            box-sizing: border-box;
+            color: #00FF32;
+            background-color: black;
+            font-family: 'Seven Segment';
+        }
+
+        button {
+            padding: 8px;
+            border: 3px solid #00FF32;
+            background-color: #000;
+            color: #00FF32;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: 'Seven Segment';
+        }
+
+        #serverStatus {
+            margin-top: 20px;
+            color: #FF0000; /* Couleur par défaut (rouge si le serveur est fermé) */
+        }
+
+
+        #loginButton {
+            padding: 8px;
+            border: 3px solid #FF0000; /* Couleur par défaut (rouge) */
+            background-color: #000;
+            color: #FF0000;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+            #loginButton.active {
+                border: 3px solid #00FF32; /* Couleur pour indiquer que le serveur est allumé (vert) */
+                color: #00FF32;
+            }
+    </style>
+</head>
+<body>
+
+    <video id="videoBackground" autoplay loop muted>
+        <source src="background.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <div id="loginContainer">
+        <label for="username">Choose a username:</label>
+        <input type="text" id="username" placeholder="Enter your username...">
+        <button onclick="login()" id="loginButton" disabled>Login</button>
+    </div>
+
+    <div id="serverStatus">WebSocket Server: Closed</div>
+
+    <script>
+        var serverStatusElement = document.getElementById("serverStatus");
+        var loginButton = document.getElementById("loginButton");
+
+        // Vérifier l'état du serveur WebSocket
+        function checkServerStatus() {
+            var socket = new WebSocket('ws://localhost:3000');
+
+            socket.addEventListener('open', function (event) {
+                // Mettre à jour l'indicateur de statut si la connexion est ouverte
+                serverStatusElement.textContent = "WebSocket Server: Open";
+                serverStatusElement.style.color = "#00FF32"; // Vert pour indiquer que le serveur est ouvert
+                loginButton.disabled = false; // Activer le bouton de connexion
+                loginButton.classList.add('active'); // Ajouter la classe 'active' pour la modification visuelle
+                socket.close(); // Fermer la connexion après la vérification
+            });
+
+            socket.addEventListener('error', function (event) {
+                // Mettre à jour l'indicateur de statut si une erreur se produit
+                serverStatusElement.textContent = "WebSocket Server: Error, server not connected";
+                serverStatusElement.style.color = "#FF0000"; // Rouge pour indiquer une erreur
+                loginButton.disabled = true; // Désactiver le bouton de connexion en cas d'erreur
+                loginButton.classList.remove('active'); // Retirer la classe 'active' pour la modification visuelle
+            });
+        }
+
+        // Vérifier l'état du serveur lors du chargement de la page
+        window.addEventListener('load', checkServerStatus);
+    </script>
+
+    <script>
+        // Function to handle the login process
+        function login() {
+            var usernameInput = document.getElementById("username");
+            var username = usernameInput.value.trim();
+
+            // Check if the username is not empty
+            if (username !== "") {
+                // Save the username in local storage
+                localStorage.setItem("username", username);
+
+                // Redirect to the main chat page
+                window.location.href = "chat.html";
+            } else {
+                // Display an error message if the username is empty
+                alert("Please enter a username.");
+            }
+        }
+    </script>
+
+</body>
+</html>
